@@ -6,4 +6,7 @@
     "matches": ["*://*.youtube.com/*"],
     "js": ["content.js"]
   }]
+  "action": {
+    "default_icon": "icons/play48.png"
+  }
 }
