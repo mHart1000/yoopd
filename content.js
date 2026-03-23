@@ -42,6 +42,8 @@ document.addEventListener('keydown', function(event) {
 		// find element on keypress to avoid a stale variable in youtube SPA
 		const video = document.querySelector('video')
 		video.playbackRate += 0.25
+		// Update speed in YouTube's UI
+		video.dispatchEvent(new Event('ratechange'))
 		showSpeedIndicator(video.playbackRate)
 	}
 	if (event.key === '[') {
@@ -49,6 +51,7 @@ document.addEventListener('keydown', function(event) {
 		const video = document.querySelector('video')
 		// avoid speed going below 0.25
 		video.playbackRate = Math.max(0.25, video.playbackRate - 0.25)
+		video.dispatchEvent(new Event('ratechange'))
 		showSpeedIndicator(video.playbackRate)
 	}
 })
