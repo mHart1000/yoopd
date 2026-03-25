@@ -3,7 +3,7 @@
   "name": "Yoopd",
   "version": "1.0",
   "content_scripts": [{
-    "matches": ["*://*.youtube.com/*"],
+    "matches": ["<all_urls>"],
     "js": ["content.js"]
   }],
   "action": {

@@ -1,7 +1,9 @@
 function showSpeedIndicator(speed) {
+	const parent = document.fullscreenElement || document.body
 	let indicator = document.getElementById('yoopd-speed-indicator')
 
-	if (!indicator) {
+	if (!indicator || !parent.contains(indicator)) {
+		if (indicator) indicator.remove()
 		indicator = document.createElement('div')
 		indicator.id = 'yoopd-speed-indicator'
 		indicator.style.cssText = `
@@ -19,7 +21,7 @@ function showSpeedIndicator(speed) {
 			transition: opacity 0.3s ease;
 			pointer-events: none;
 		`
-		document.body.appendChild(indicator)
+		parent.appendChild(indicator)
 	}
 
 	indicator.textContent = `${speed.toFixed(2)}x`
