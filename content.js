@@ -56,4 +56,16 @@ document.addEventListener('keydown', function(event) {
 		video.dispatchEvent(new Event('ratechange'))
 		showSpeedIndicator(video.playbackRate)
 	}
+	if (event.key === 'f' || event.key === 'F') {
+		if (document.fullscreenElement) {
+			document.exitFullscreen()
+		} else {
+			const video = document.querySelector('video')
+			if (video) {
+				// Prefer the player container so site controls remain visible
+				const container = video.closest('[class*="player"]') || video
+				container.requestFullscreen()
+			}
+		}
+	}
 })
