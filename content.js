@@ -39,6 +39,9 @@ function showSpeedIndicator(speed) {
 }
 
 document.addEventListener('keydown', function(event) {
+	// Ignore when modifier keys are held (e.g. Ctrl+F for browser find)
+	if (event.ctrlKey || event.altKey || event.metaKey) return
+
 	if (event.key === "]") {
 		event.preventDefault()
 		// find element on keypress to avoid a stale variable in youtube SPA
@@ -60,10 +63,11 @@ document.addEventListener('keydown', function(event) {
 		if (document.fullscreenElement) {
 			document.exitFullscreen()
 		} else {
-			const video = document.querySelector('video')
-			if (video) {
-				// Prefer the player container so site controls remain visible
-				const container = video.closest('[class*="player"]') || video
+			// Only fullscreen a video that is currently playing
+			const videos = document.querySelectorAll('video')
+			const playing = Array.from(videos).find(v => !v.paused)
+			if (playing) {
+				const container = playing.closest('[class*="player"]') || playing
 				container.requestFullscreen()
 			}
 		}
