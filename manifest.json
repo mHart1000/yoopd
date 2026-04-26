@@ -2,11 +2,15 @@
   "manifest_version": 3,
   "name": "Yoopd",
   "version": "1.0",
+  "icons": {
+    "48": "icons/yoopd-logo.png",
+    "128": "icons/yoopd-logo.png"
+  },
   "content_scripts": [{
     "matches": ["*://*.youtube.com/*"],
     "js": ["content.js"]
   }],
   "action": {
-    "default_icon": "icons/play48.png"
+    "default_icon": "icons/yoopd-logo.png"
   }
 }
