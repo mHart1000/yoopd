@@ -1,7 +1,9 @@
 function showSpeedIndicator(speed) {
+	const parent = document.fullscreenElement || document.body
 	let indicator = document.getElementById('yoopd-speed-indicator')
 
-	if (!indicator) {
+	if (!indicator || !parent.contains(indicator)) {
+		if (indicator) indicator.remove()
 		indicator = document.createElement('div')
 		indicator.id = 'yoopd-speed-indicator'
 		indicator.style.cssText = `
@@ -19,7 +21,7 @@ function showSpeedIndicator(speed) {
 			transition: opacity 0.3s ease;
 			pointer-events: none;
 		`
-		document.body.appendChild(indicator)
+		parent.appendChild(indicator)
 	}
 
 	indicator.textContent = `${speed.toFixed(2)}x`
@@ -37,6 +39,9 @@ function showSpeedIndicator(speed) {
 }
 
 document.addEventListener('keydown', function(event) {
+	// Ignore when modifier keys are held (e.g. Ctrl+F for browser find)
+	if (event.ctrlKey || event.altKey || event.metaKey) return
+
 	if (event.key === "]") {
 		event.preventDefault()
 		// find element on keypress to avoid a stale variable in youtube SPA
@@ -53,5 +58,18 @@ document.addEventListener('keydown', function(event) {
 		video.playbackRate = Math.max(0.25, video.playbackRate - 0.25)
 		video.dispatchEvent(new Event('ratechange'))
 		showSpeedIndicator(video.playbackRate)
+	}
+	if (event.key === 'f' || event.key === 'F') {
+		if (document.fullscreenElement) {
+			document.exitFullscreen()
+		} else {
+			// Only fullscreen a video that is currently playing
+			const videos = document.querySelectorAll('video')
+			const playing = Array.from(videos).find(v => !v.paused)
+			if (playing) {
+				const container = playing.closest('[class*="player"]') || playing
+				container.requestFullscreen()
+			}
+		}
 	}
 })

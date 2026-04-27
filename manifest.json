@@ -7,7 +7,7 @@
     "128": "icons/yoopd-logo.png"
   },
   "content_scripts": [{
-    "matches": ["*://*.youtube.com/*"],
+    "matches": ["<all_urls>"],
     "js": ["content.js"]
   }],
   "action": {
