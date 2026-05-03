@@ -42,22 +42,36 @@ document.addEventListener('keydown', function(event) {
 	// Ignore when modifier keys are held (e.g. Ctrl+F for browser find)
 	if (event.ctrlKey || event.altKey || event.metaKey) return
 
+	// Ignore if user is typing in an input field
+	const target = event.target
+	if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+		return
+	}
+
 	if (event.key === "]") {
 		event.preventDefault()
+		event.stopPropagation()
+		event.stopImmediatePropagation()
 		// find element on keypress to avoid a stale variable in youtube SPA
 		const video = document.querySelector('video')
-		video.playbackRate += 0.25
-		// Update speed in YouTube's UI
-		video.dispatchEvent(new Event('ratechange'))
-		showSpeedIndicator(video.playbackRate)
+		if (video) {
+			video.playbackRate += 0.25
+			// Update speed in YouTube's UI
+			video.dispatchEvent(new Event('ratechange'))
+			showSpeedIndicator(video.playbackRate)
+		}
 	}
 	if (event.key === '[') {
 		event.preventDefault()
+		event.stopPropagation()
+		event.stopImmediatePropagation()
 		const video = document.querySelector('video')
-		// avoid speed going below 0.25
-		video.playbackRate = Math.max(0.25, video.playbackRate - 0.25)
-		video.dispatchEvent(new Event('ratechange'))
-		showSpeedIndicator(video.playbackRate)
+		if (video) {
+			// avoid speed going below 0.25
+			video.playbackRate = Math.max(0.25, video.playbackRate - 0.25)
+			video.dispatchEvent(new Event('ratechange'))
+			showSpeedIndicator(video.playbackRate)
+		}
 	}
 	if (event.key === 'f' || event.key === 'F') {
 		if (document.fullscreenElement) {
@@ -72,4 +86,4 @@ document.addEventListener('keydown', function(event) {
 			}
 		}
 	}
-})
+}, true)
