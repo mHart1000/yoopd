@@ -81,7 +81,7 @@ document.addEventListener('keydown', function(event) {
 			const videos = document.querySelectorAll('video')
 			const playing = Array.from(videos).find(v => !v.paused)
 			if (playing) {
-				const container = playing.closest('[class*="player"]') || playing
+				const container = playing.closest('[class*="player" i]') || playing
 				container.requestFullscreen()
 			}
 		}
