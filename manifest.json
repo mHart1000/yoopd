@@ -7,7 +7,15 @@
     "128": "icons/yoopd-logo.png"
   },
   "content_scripts": [{
-    "matches": ["*://*.youtube.com/*"],
+    "matches": ["<all_urls>"],
+    "exclude_matches": [
+      "*://*.ebay.com/*",
+      "*://*.ebay.co.uk/*",
+      "*://*.ebay.de/*",
+      "*://*.ebay.com.au/*",
+      "*://*.ebay.ca/*"
+    ],
+    "all_frames": true,
     "js": ["content.js"]
   }],
   "action": {

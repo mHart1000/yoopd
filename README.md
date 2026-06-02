@@ -1,4 +1,5 @@
-youtube hotkeys plugin
+Video hotkeys plugin
+
 
 ] - speed up
 [ - slow down
