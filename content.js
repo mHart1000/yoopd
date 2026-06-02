@@ -87,3 +87,84 @@ document.addEventListener('keydown', function(event) {
 		}
 	}
 }, true)
+
+// --- Fallback playback hotkeys ----------------------------------------------
+// Standard video controls (seek, volume, play/pause) for players that don't
+// ship their own. We listen in the BUBBLE phase on window so the page's own
+// handlers always run first. If the page already acted on the key (it called
+// preventDefault, or stopped the event before it reached us) we leave it alone,
+// so on sites that already have these shortcuts theirs win and we never double up.
+
+// The video worth controlling: a reasonably sized, on-screen one (so we don't
+// hijack page scrolling for a tiny/off-screen incidental video), preferring the
+// one that's currently playing.
+function getActiveVideo() {
+	const videos = Array.from(document.querySelectorAll('video')).filter(v => {
+		const r = v.getBoundingClientRect()
+		const onScreen = r.bottom > 0 && r.right > 0 && r.top < window.innerHeight && r.left < window.innerWidth
+		return onScreen && r.width >= 200 && r.height >= 150
+	})
+	if (!videos.length) return null
+	return videos.find(v => !v.paused) || videos[0]
+}
+
+function isTyping(el) {
+	return !!el && (el.isContentEditable ||
+		el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT')
+}
+
+// Elements that act on Space/Enter themselves — don't steal those keys from them.
+function isClickable(el) {
+	if (!el) return false
+	if (el.tagName === 'BUTTON' || el.tagName === 'A' || el.tagName === 'SUMMARY') return true
+	const role = el.getAttribute && el.getAttribute('role')
+	return ['button', 'link', 'menuitem', 'menuitemradio', 'menuitemcheckbox',
+		'tab', 'option', 'checkbox', 'switch', 'radio'].includes(role)
+}
+
+// Widgets that use the arrow keys themselves (sliders, menus, ...).
+function usesArrowKeys(el) {
+	if (!el) return false
+	const role = el.getAttribute && el.getAttribute('role')
+	return ['slider', 'spinbutton', 'listbox', 'menu', 'menubar', 'tablist', 'tree'].includes(role)
+}
+
+window.addEventListener('keydown', function(event) {
+	if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return
+	// The page already handled this key — stay out of the way.
+	if (event.defaultPrevented) return
+
+	const key = event.key
+	const isSeek = key === 'ArrowLeft' || key === 'ArrowRight'
+	const isVolume = key === 'ArrowUp' || key === 'ArrowDown'
+	const isPlayPause = key === ' ' || key === 'Spacebar' || key === 'Enter'
+	if (!isSeek && !isVolume && !isPlayPause) return
+
+	const target = event.target
+	if (isTyping(target)) return
+	if ((isSeek || isVolume) && usesArrowKeys(target)) return
+	if (isPlayPause && isClickable(target)) return
+
+	const video = getActiveVideo()
+	if (!video) return
+
+	if (isSeek) {
+		const end = isFinite(video.duration) ? video.duration : Infinity
+		const delta = key === 'ArrowRight' ? 5 : -5
+		video.currentTime = Math.min(end, Math.max(0, video.currentTime + delta))
+	} else if (isVolume) {
+		video.muted = false
+		const delta = key === 'ArrowUp' ? 0.05 : -0.05
+		video.volume = Math.min(1, Math.max(0, video.volume + delta))
+	} else {
+		if (video.paused) {
+			const playPromise = video.play()
+			if (playPromise) playPromise.catch(() => {})
+		} else {
+			video.pause()
+		}
+	}
+
+	// We handled it — prevent the page's default (scrolling on Space/arrows).
+	event.preventDefault()
+}, false)
