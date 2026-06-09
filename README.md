@@ -13,3 +13,4 @@ f - toggle fullscreen
 ↑ - volume up
 ↓ - volume down
 space / enter - play / pause
+c - toggle captions

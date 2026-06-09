@@ -129,6 +129,55 @@ function usesArrowKeys(el) {
 	return ['slider', 'spinbutton', 'listbox', 'menu', 'menubar', 'tablist', 'tree'].includes(role)
 }
 
+// --- Site-specific overrides ------------------------------------------------
+// Scoped fixes for players that can't be driven the universal way. Each entry is
+// gated on location.hostname, so any site NOT listed here is completely
+// unaffected — the universal behavior stays the default everywhere else. To
+// support a new site, add an entry; don't touch the generic code below.
+const SITE_OVERRIDES = [
+	{
+		// Codecademy plays Skillsoft Percipio videos in a cross-origin iframe.
+		// The player is video.js wrapped in React, which re-applies its own
+		// caption state, so setting textTrack.mode gets reverted. Drive the
+		// player's own caption control instead.
+		matches: host => host === 'percipio.com' || host.endsWith('.percipio.com'),
+		toggleCaptions: () => {
+			const btn = document.querySelector('#video-player-cc-settings-button')
+			if (!btn) return false
+			btn.click()
+			return true
+		}
+	}
+]
+
+function siteOverride() {
+	return SITE_OVERRIDES.find(o => o.matches(location.hostname)) || null
+}
+
+function captionTracks(video) {
+	return Array.from((video && video.textTracks) || []).filter(t => t.kind === 'captions' || t.kind === 'subtitles')
+}
+
+function captionsOn(video) {
+	return captionTracks(video).some(t => t.mode === 'showing')
+}
+
+function toggleCaptions(video) {
+	const override = siteOverride()
+	if (override && override.toggleCaptions && override.toggleCaptions(video)) return
+
+	const tracks = captionTracks(video)
+	if (!tracks.length) return
+	if (captionsOn(video)) {
+		tracks.forEach(t => { t.mode = 'disabled' })
+	} else {
+		// Prefer a track matching the page language, otherwise the first one.
+		const lang = (document.documentElement.lang || '').slice(0, 2).toLowerCase()
+		const pick = tracks.find(t => (t.language || '').slice(0, 2).toLowerCase() === lang) || tracks[0]
+		pick.mode = 'showing'
+	}
+}
+
 window.addEventListener('keydown', function(event) {
 	if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return
 	// The page already handled this key — stay out of the way.
@@ -168,3 +217,25 @@ window.addEventListener('keydown', function(event) {
 	// We handled it — prevent the page's default (scrolling on Space/arrows).
 	event.preventDefault()
 }, false)
+
+// Captions toggle ('c'). 'c' has no default browser action, so a site that owns
+// it (YouTube, LinkedIn Learning, ...) won't call preventDefault for us to
+// detect. So we snapshot the caption state in the CAPTURE phase — before any
+// page handler runs — then on the next tick only toggle if nothing else changed
+// it. That way the site's own shortcut wins where it exists and we never
+// double-toggle; we only fill in on players that don't handle 'c' themselves.
+window.addEventListener('keydown', function(event) {
+	if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return
+	if (event.key !== 'c' && event.key !== 'C') return
+	if (isTyping(event.target)) return
+
+	const override = siteOverride()
+	const video = getActiveVideo()
+	// Without a site-specific toggler we need a native caption track to work with.
+	if (!override && (!video || !captionTracks(video).length)) return
+
+	const before = captionsOn(video)
+	setTimeout(() => {
+		if (captionsOn(video) === before) toggleCaptions(video)
+	}, 0)
+}, true)
